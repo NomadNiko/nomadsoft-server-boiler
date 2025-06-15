@@ -4,7 +4,7 @@ import { UserMapper } from '../../../../../users/infrastructure/persistence/rela
 
 export class CommentMapper {
   static toDomain(raw: CommentEntity): Comment {
-    const domainEntity = new Comment();
+    const domainEntity = new Comment({});
     domainEntity.id = raw.id;
     domainEntity.content = raw.content;
     domainEntity.createdAt = raw.createdAt;

@@ -11,7 +11,7 @@ import { User } from '../../../../../users/domain/user';
 import { PostRepository } from '../../post.repository';
 import { UserMapper } from '../../../../../users/infrastructure/persistence/relational/mappers/user.mapper';
 import { DeepPartial } from '../../../../../utils/types/deep-partial.type';
-import { PaginationOptions } from '../../../../../utils/types/pagination-options';
+import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 
 @Injectable()
 export class PostsRelationalRepository implements PostRepository {
@@ -30,7 +30,7 @@ export class PostsRelationalRepository implements PostRepository {
     return PostMapper.toDomain(newEntity);
   }
 
-  async findAllWithPagination(paginationOptions: PaginationOptions): Promise<Post[]> {
+  async findAllWithPagination(paginationOptions: IPaginationOptions): Promise<Post[]> {
     const entities = await this.postRepository.find({
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
@@ -56,7 +56,7 @@ export class PostsRelationalRepository implements PostRepository {
     const entities = await this.postRepository.find({
       where: {
         user: {
-          id: user.id,
+          id: Number(user.id),
         },
       },
       relations: ['comments', 'comments.user'],
@@ -77,8 +77,14 @@ export class PostsRelationalRepository implements PostRepository {
       throw new Error('Post not found');
     }
 
+    // Convert domain payload to persistence payload
+    const persistencePayload: Partial<PostEntity> = {};
+    if (payload.name !== undefined) persistencePayload.name = payload.name;
+    if (payload.content !== undefined) persistencePayload.content = payload.content;
+    if (payload.imageUrl !== undefined) persistencePayload.imageUrl = payload.imageUrl;
+
     const updatedEntity = await this.postRepository.save(
-      this.postRepository.merge(entity, payload),
+      this.postRepository.merge(entity, persistencePayload),
     );
 
     return PostMapper.toDomain(updatedEntity);

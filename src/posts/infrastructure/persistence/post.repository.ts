@@ -2,12 +2,12 @@ import { Post } from '../../domain/post';
 import { Comment } from '../../domain/comment';
 import { User } from '../../../users/domain/user';
 import { DeepPartial } from '../../../utils/types/deep-partial.type';
-import { PaginationOptions } from '../../../utils/types/pagination-options';
+import { IPaginationOptions } from '../../../utils/types/pagination-options';
 
 export abstract class PostRepository {
   abstract create(data: Omit<DeepPartial<Post>, 'id' | 'createdAt' | 'updatedAt'>): Promise<Post>;
   
-  abstract findAllWithPagination(paginationOptions: PaginationOptions): Promise<Post[]>;
+  abstract findAllWithPagination(paginationOptions: IPaginationOptions): Promise<Post[]>;
   
   abstract findById(id: string): Promise<Post | null>;
   
