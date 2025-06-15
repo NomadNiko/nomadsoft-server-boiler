@@ -59,7 +59,7 @@ export class PostsDocumentRepository implements PostRepository {
 
   async findByUser(user: User): Promise<Post[]> {
     const posts = await this.postModel
-      .find({ user: new Types.ObjectId(user.id.toString()) })
+      .find({ user: user.id })
       .populate('user')
       .populate('comments.user')
       .sort({ createdAt: -1 })
@@ -104,7 +104,7 @@ export class PostsDocumentRepository implements PostRepository {
     const newComment = {
       _id: new Types.ObjectId(),
       content: commentData.content as string,
-      user: new Types.ObjectId((commentData.user as User).id.toString()) as any,
+      user: (commentData.user as User).id as any,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -130,7 +130,7 @@ export class PostsDocumentRepository implements PostRepository {
     await this.postModel
       .findByIdAndUpdate(
         postId,
-        { $pull: { comments: { _id: new Types.ObjectId(commentId) } } },
+        { $pull: { comments: { _id: commentId } } },
         { new: true }
       )
       .exec();
