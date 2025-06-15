@@ -61,6 +61,25 @@ export class UserUpdateService {
       email = null;
     }
 
+    // Validate username uniqueness
+    let username: string | null | undefined = undefined;
+    if (updateUserDto.username !== undefined) {
+      if (updateUserDto.username) {
+        const userByUsername = await this.usersRepository.findByUsername(updateUserDto.username);
+        if (userByUsername && userByUsername.id !== id) {
+          throw new UnprocessableEntityException({
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            errors: {
+              username: 'usernameAlreadyExists',
+            },
+          });
+        }
+        username = updateUserDto.username;
+      } else if (updateUserDto.username === null) {
+        username = null;
+      }
+    }
+
     let photo: FileType | null | undefined = undefined;
 
     if (updateUserDto.photo?.id) {
@@ -126,6 +145,7 @@ export class UserUpdateService {
       firstName: updateUserDto.firstName,
       lastName: updateUserDto.lastName,
       email,
+      username,
       password,
       photo,
       role,
