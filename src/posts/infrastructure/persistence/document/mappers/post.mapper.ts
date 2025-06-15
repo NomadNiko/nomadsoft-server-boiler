@@ -4,9 +4,9 @@ import { PostSchemaClass } from '../entities/post.schema';
 import { UserMapper } from '../../../../../users/infrastructure/persistence/document/mappers/user.mapper';
 
 export class PostMapper {
-  static toDomain(raw: PostSchemaClass): Post {
+  static toDomain(raw: any): Post {
     const domainEntity = new Post({});
-    domainEntity.id = raw._id.toString();
+    domainEntity.id = raw._id?.toString() || raw.id?.toString();
     domainEntity.name = raw.name;
     domainEntity.content = raw.content;
     domainEntity.imageUrl = raw.imageUrl;

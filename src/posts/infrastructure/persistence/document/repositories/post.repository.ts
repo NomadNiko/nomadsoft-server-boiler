@@ -104,7 +104,7 @@ export class PostsDocumentRepository implements PostRepository {
     const newComment = {
       _id: new Types.ObjectId(),
       content: commentData.content as string,
-      user: new Types.ObjectId((commentData.user as User).id.toString()),
+      user: new Types.ObjectId((commentData.user as User).id.toString()) as any,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
