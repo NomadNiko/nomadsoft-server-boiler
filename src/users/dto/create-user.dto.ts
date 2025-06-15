@@ -10,6 +10,8 @@ import {
   IsNotEmpty,
   IsOptional,
   MinLength,
+  MaxLength,
+  Matches,
 } from 'class-validator';
 import { FileDto } from '../../files/dto/file.dto';
 import { RoleDto } from '../../roles/dto/role.dto';
@@ -22,6 +24,20 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsEmail()
   email: string | null;
+
+  @ApiPropertyOptional({
+    example: 'john_doe',
+    type: String,
+    description: 'Unique username (3-20 characters, alphanumeric, underscore, hyphen only)',
+  })
+  @IsOptional()
+  @IsNotEmpty()
+  @MinLength(3)
+  @MaxLength(20)
+  @Matches(/^[a-zA-Z0-9_-]+$/, {
+    message: 'Username can only contain letters, numbers, underscores, and hyphens'
+  })
+  username?: string | null;
 
   @ApiProperty()
   @MinLength(6)

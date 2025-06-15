@@ -56,8 +56,8 @@ export class User {
 
   @ApiProperty({
     type: String,
-    example: 'johndoe',
-    required: false,
+    example: 'john_doe',
+    description: 'Unique username for leaderboards and gaming'
   })
   username?: string | null;
 

@@ -50,6 +50,19 @@ export class UserCreateService {
       email = createUserDto.email;
     }
 
+    // Validate username uniqueness
+    if (createUserDto.username) {
+      const userByUsername = await this.usersRepository.findByUsername(createUserDto.username);
+      if (userByUsername) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            username: 'usernameAlreadyExists',
+          },
+        });
+      }
+    }
+
     let photo: FileType | null | undefined = undefined;
 
     if (createUserDto.photo?.id) {
@@ -115,6 +128,7 @@ export class UserCreateService {
       firstName: createUserDto.firstName,
       lastName: createUserDto.lastName,
       email: email,
+      username: createUserDto.username,
       password: password,
       photo: photo,
       role: role,
