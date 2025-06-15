@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { UserSchemaClass } from '../../../../../users/infrastructure/persistence/document/entities/user.schema';
-// CommentSchemaClass will be defined inline to avoid circular import
 
 export type PostSchemaDocument = PostSchemaClass & Document;
 
@@ -48,6 +47,7 @@ export class PostSchemaClass {
     default: [],
   })
   comments: Array<{
+    _id?: Types.ObjectId;
     content: string;
     user: UserSchemaClass;
     createdAt: Date;
