@@ -8,12 +8,14 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { QueryPostDto } from './dto/query-post.dto';
 import { FilesService } from '../files/files.service';
+import { HiddenUsersService } from '../hidden-users/hidden-users.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly filesService: FilesService,
+    private readonly hiddenUsersService: HiddenUsersService,
   ) {}
 
   async create(createPostDto: CreatePostDto, user: User): Promise<Post> {
@@ -34,10 +36,22 @@ export class PostsService {
   }
 
   async findAll(query: QueryPostDto): Promise<Post[]> {
-    return this.postRepository.findAllWithPagination({
+    // Get all hidden user IDs
+    const hiddenUserIds = await this.hiddenUsersService.getAllHiddenUserIds();
+    console.log(`[PostsService] Hidden user IDs: ${hiddenUserIds.join(', ')}`);
+    
+    // Get all posts
+    const allPosts = await this.postRepository.findAllWithPagination({
       page: query.page ?? 1,
       limit: query.limit ?? 10,
     });
+    console.log(`[PostsService] Total posts before filtering: ${allPosts.length}`);
+    
+    // Filter out posts from hidden users
+    const filteredPosts = allPosts.filter(post => !hiddenUserIds.includes(post.user.id.toString()));
+    console.log(`[PostsService] Posts after filtering: ${filteredPosts.length}`);
+    
+    return filteredPosts;
   }
 
   async findOne(id: string): Promise<Post> {

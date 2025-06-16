@@ -209,3 +209,39 @@ export class SocialController {
     return this.usersService.removeFriend(request.user.id, friendId);
   }
 }
+
+// Public controller for user information that doesn't require authentication
+@ApiTags('Public Users')
+@Controller({
+  path: 'public/users',
+  version: '1',
+})
+export class PublicUsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @ApiOkResponse({
+    description: 'Get the number of friends for a user',
+    schema: {
+      type: 'object',
+      properties: {
+        userId: { type: 'string' },
+        friendsCount: { type: 'number' },
+      },
+    },
+  })
+  @Get(':userId/friends-count')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'userId',
+    type: String,
+    required: true,
+    description: 'The ID of the user to get friends count for',
+  })
+  async getFriendsCount(@Param('userId') userId: string): Promise<{ userId: string; friendsCount: number }> {
+    const friendsCount = await this.usersService.getFriendsCount(userId);
+    return {
+      userId,
+      friendsCount,
+    };
+  }
+}

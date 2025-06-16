@@ -150,4 +150,12 @@ export class UsersService {
       friendsCount,
     };
   }
+
+  async getFriendsCount(userId: User['id']): Promise<number> {
+    const user = await this.findById(userId);
+    if (!user) {
+      return 0;
+    }
+    return user.friends?.length || 0;
+  }
 }
