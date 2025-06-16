@@ -152,6 +152,7 @@ export class UserUpdateService {
       status,
       provider: updateUserDto.provider,
       socialId: updateUserDto.socialId,
+      friends: updateUserDto.friends,
     });
   }
 }
