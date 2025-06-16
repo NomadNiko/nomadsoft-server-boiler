@@ -7,14 +7,27 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { QueryPostDto } from './dto/query-post.dto';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly postRepository: PostRepository) {}
+  constructor(
+    private readonly postRepository: PostRepository,
+    private readonly filesService: FilesService,
+  ) {}
 
   async create(createPostDto: CreatePostDto, user: User): Promise<Post> {
+    let images;
+    
+    if (createPostDto.images && createPostDto.images.length > 0) {
+      images = await this.filesService.findByIds(
+        createPostDto.images.map(img => img.id)
+      );
+    }
+
     return this.postRepository.create({
       ...createPostDto,
+      images,
       user,
       comments: [],
     });
@@ -39,6 +52,10 @@ export class PostsService {
     return this.postRepository.findByUser(user);
   }
 
+  async findPostsByUserIds(userIds: string[]): Promise<Post[]> {
+    return this.postRepository.findByUserIds(userIds);
+  }
+
   async update(id: string, updatePostDto: UpdatePostDto, user: User): Promise<Post> {
     const post = await this.postRepository.findById(id);
     if (!post) {
@@ -49,7 +66,23 @@ export class PostsService {
       throw new ForbiddenException('You can only update your own posts');
     }
 
-    return this.postRepository.update(id, updatePostDto);
+    let images;
+    
+    if (updatePostDto.images && updatePostDto.images.length > 0) {
+      images = await this.filesService.findByIds(
+        updatePostDto.images.map(img => img.id)
+      );
+    } else if (updatePostDto.images && updatePostDto.images.length === 0) {
+      // Explicitly setting to empty array to clear images
+      images = [];
+    }
+
+    const updateData = {
+      ...updatePostDto,
+      ...(images !== undefined && { images }),
+    };
+
+    return this.postRepository.update(id, updateData);
   }
 
   async remove(id: string, user: User): Promise<void> {

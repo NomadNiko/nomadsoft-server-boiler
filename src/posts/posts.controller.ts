@@ -18,8 +18,9 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { QueryPostDto } from './dto/query-post.dto';
+import { FindPostsByUsersDto } from './dto/find-posts-by-users.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PostDto } from './dto/post.dto';
 
 @ApiTags('Posts')
@@ -33,7 +34,7 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @SerializeOptions({
-    type: PostDto,
+    groups: ['me'],
   })
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -42,7 +43,7 @@ export class PostsController {
   }
 
   @SerializeOptions({
-    type: PostDto,
+    groups: ['me'],
   })
   @Get()
   findAll(@Query() query: QueryPostDto) {
@@ -50,15 +51,25 @@ export class PostsController {
   }
 
   @SerializeOptions({
-    type: PostDto,
+    groups: ['me'],
   })
   @Get('my-posts')
   findUserPosts(@Request() req) {
     return this.postsService.findUserPosts(req.user);
   }
 
+  @ApiOperation({ summary: 'Get posts from specific users (for following/friends feeds)' })
   @SerializeOptions({
-    type: PostDto,
+    groups: ['me'],
+  })
+  @Post('by-users')
+  @HttpCode(HttpStatus.OK)
+  findPostsByUsers(@Body() findPostsByUsersDto: FindPostsByUsersDto) {
+    return this.postsService.findPostsByUserIds(findPostsByUsersDto.userIds);
+  }
+
+  @SerializeOptions({
+    groups: ['me'],
   })
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -66,7 +77,7 @@ export class PostsController {
   }
 
   @SerializeOptions({
-    type: PostDto,
+    groups: ['me'],
   })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto, @Request() req) {

@@ -49,12 +49,17 @@ export class RegistrationService {
       },
     );
 
-    await this.mailService.userSignUp({
-      to: dto.email,
-      data: {
-        hash,
-      },
-    });
+    try {
+      await this.mailService.userSignUp({
+        to: dto.email,
+        data: {
+          hash,
+        },
+      });
+    } catch (error) {
+      // Log the error but don't fail the registration
+      console.error('Failed to send confirmation email:', error);
+    }
   }
 
   async confirmEmail(hash: string): Promise<void> {

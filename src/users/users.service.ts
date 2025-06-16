@@ -9,6 +9,8 @@ import { UserCreateService } from './services/user-create.service';
 import { UserReadService } from './services/user-read.service';
 import { UserUpdateService } from './services/user-update.service';
 import { UserDeleteService } from './services/user-delete.service';
+import { PostRepository } from '../posts/infrastructure/persistence/post.repository';
+import { SocialInfoDto } from './dto/social-info.dto';
 
 @Injectable()
 export class UsersService {
@@ -17,6 +19,7 @@ export class UsersService {
     private readonly userReadService: UserReadService,
     private readonly userUpdateService: UserUpdateService,
     private readonly userDeleteService: UserDeleteService,
+    private readonly postRepository: PostRepository,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -77,5 +80,74 @@ export class UsersService {
 
   async remove(id: User['id']): Promise<void> {
     await this.userDeleteService.remove(id);
+  }
+
+  async addFriend(userId: User['id'], friendId: User['id']): Promise<User | null> {
+    const user = await this.findById(userId);
+    if (!user) {
+      return null;
+    }
+
+    // Check if friend exists
+    const friend = await this.findById(friendId);
+    if (!friend) {
+      throw new Error('Friend user not found');
+    }
+
+    // Check if already friends
+    if (user.friends?.includes(friendId as string)) {
+      throw new Error('Users are already friends');
+    }
+
+    // Add friend to user's friends list
+    const updatedFriends = [...(user.friends || []), friendId as string];
+    return this.update(userId, { friends: updatedFriends });
+  }
+
+  async removeFriend(userId: User['id'], friendId: User['id']): Promise<User | null> {
+    const user = await this.findById(userId);
+    if (!user) {
+      return null;
+    }
+
+    // Remove friend from user's friends list
+    const updatedFriends = (user.friends || []).filter(id => id !== friendId);
+    return this.update(userId, { friends: updatedFriends });
+  }
+
+  async getFriends(userId: User['id']): Promise<User[]> {
+    const user = await this.findById(userId);
+    if (!user || !user.friends?.length) {
+      return [];
+    }
+
+    // Get full user objects for all friends
+    return this.findByIds(user.friends);
+  }
+
+  async getSocialInfo(userId: User['id']): Promise<SocialInfoDto> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Get posts count
+    const userPosts = await this.postRepository.findByUser(user);
+    const postsCount = userPosts.length;
+
+    // Get comments count by counting comments across all posts where user is the commenter
+    const allPosts = await this.postRepository.findAllWithPagination({ page: 1, limit: 1000 });
+    const commentsCount = allPosts.reduce((count, post) => {
+      return count + (post.comments?.filter(comment => comment.user.id === userId).length || 0);
+    }, 0);
+
+    // Get friends count
+    const friendsCount = user.friends?.length || 0;
+
+    return {
+      postsCount,
+      commentsCount,
+      friendsCount,
+    };
   }
 }

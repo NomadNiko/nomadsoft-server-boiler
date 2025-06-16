@@ -2,6 +2,7 @@ import { Post } from '../../../../domain/post';
 import { Comment } from '../../../../domain/comment';
 import { PostSchemaClass } from '../entities/post.schema';
 import { UserMapper } from '../../../../../users/infrastructure/persistence/document/mappers/user.mapper';
+import { FileMapper } from '../../../../../files/infrastructure/persistence/document/mappers/file.mapper';
 
 export class PostMapper {
   static toDomain(raw: any): Post {
@@ -15,6 +16,12 @@ export class PostMapper {
     
     if (raw.user) {
       domainEntity.user = UserMapper.toDomain(raw.user);
+    }
+
+    if (raw.images && Array.isArray(raw.images)) {
+      domainEntity.images = raw.images
+        .filter((image) => image && (image._id || image.id))
+        .map((image) => FileMapper.toDomain(image));
     }
 
     if (raw.comments) {
@@ -51,6 +58,10 @@ export class PostMapper {
     
     if (domainEntity.user) {
       persistenceEntity.user = UserMapper.toPersistence(domainEntity.user);
+    }
+
+    if (domainEntity.images) {
+      persistenceEntity.images = domainEntity.images.map((image) => FileMapper.toPersistence(image));
     }
 
     if (domainEntity.comments) {

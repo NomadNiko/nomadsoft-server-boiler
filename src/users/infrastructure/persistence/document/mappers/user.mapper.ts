@@ -18,7 +18,7 @@ export class UserMapper {
     domainEntity.socialId = raw.socialId;
     domainEntity.firstName = raw.firstName;
     domainEntity.lastName = raw.lastName;
-    if (raw.photo) {
+    if (raw.photo && raw.photo._id) {
       domainEntity.photo = FileMapper.toDomain(raw.photo);
     } else if (raw.photo === null) {
       domainEntity.photo = null;
@@ -34,6 +34,7 @@ export class UserMapper {
       domainEntity.status.id = raw.status._id;
     }
 
+    domainEntity.friends = raw.friends || [];
     domainEntity.createdAt = raw.createdAt;
     domainEntity.updatedAt = raw.updatedAt;
     domainEntity.deletedAt = raw.deletedAt;
@@ -78,6 +79,7 @@ export class UserMapper {
     persistenceSchema.photo = photo;
     persistenceSchema.role = role;
     persistenceSchema.status = status;
+    persistenceSchema.friends = domainEntity.friends || [];
     persistenceSchema.createdAt = domainEntity.createdAt;
     persistenceSchema.updatedAt = domainEntity.updatedAt;
     persistenceSchema.deletedAt = domainEntity.deletedAt;

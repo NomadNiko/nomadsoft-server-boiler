@@ -11,6 +11,7 @@ import {
   HttpStatus,
   HttpCode,
   SerializeOptions,
+  Request,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -35,6 +36,8 @@ import { User } from './domain/user';
 import { UsersService } from './users.service';
 import { RolesGuard } from '../roles/roles.guard';
 import { infinityPagination } from '../utils/infinity-pagination';
+import { AddFriendDto } from './dto/add-friend.dto';
+import { SocialInfoDto } from './dto/social-info.dto';
 
 @ApiBearerAuth()
 @Roles(RoleEnum.admin)
@@ -135,5 +138,74 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: User['id']): Promise<void> {
     return this.usersService.remove(id);
+  }
+}
+
+// Separate controller for user-facing social features
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
+@ApiTags('Social')
+@Controller({
+  path: 'social',
+  version: '1',
+})
+export class SocialController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @ApiOkResponse({
+    type: SocialInfoDto,
+  })
+  @Get('info')
+  @HttpCode(HttpStatus.OK)
+  getSocialInfo(@Request() request): Promise<SocialInfoDto> {
+    return this.usersService.getSocialInfo(request.user.id);
+  }
+
+  @ApiOkResponse({
+    type: [User],
+    description: 'List of friends with full user details',
+  })
+  @SerializeOptions({
+    groups: ['me'],
+  })
+  @Get('friends')
+  @HttpCode(HttpStatus.OK)
+  getFriends(@Request() request): Promise<User[]> {
+    return this.usersService.getFriends(request.user.id);
+  }
+
+  @ApiOkResponse({
+    type: User,
+  })
+  @SerializeOptions({
+    groups: ['me'],
+  })
+  @Post('friends')
+  @HttpCode(HttpStatus.OK)
+  addFriend(
+    @Request() request,
+    @Body() addFriendDto: AddFriendDto,
+  ): Promise<User | null> {
+    return this.usersService.addFriend(request.user.id, addFriendDto.friendId);
+  }
+
+  @ApiOkResponse({
+    type: User,
+  })
+  @SerializeOptions({
+    groups: ['me'],
+  })
+  @Delete('friends/:friendId')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'friendId',
+    type: String,
+    required: true,
+  })
+  removeFriend(
+    @Request() request,
+    @Param('friendId') friendId: string,
+  ): Promise<User | null> {
+    return this.usersService.removeFriend(request.user.id, friendId);
   }
 }

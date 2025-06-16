@@ -25,11 +25,7 @@ export class FileType {
     ({ value }) => {
       if ((fileConfig() as FileConfig).driver === FileDriver.LOCAL) {
         return (appConfig() as AppConfig).backendDomain + value;
-      } else if (
-        [FileDriver.S3_PRESIGNED, FileDriver.S3].includes(
-          (fileConfig() as FileConfig).driver,
-        )
-      ) {
+      } else if ((fileConfig() as FileConfig).driver === FileDriver.S3_PRESIGNED) {
         const s3 = new S3Client({
           region: (fileConfig() as FileConfig).awsS3Region ?? '',
           credentials: {
@@ -44,6 +40,11 @@ export class FileType {
         });
 
         return getSignedUrl(s3, command, { expiresIn: 3600 });
+      } else if ((fileConfig() as FileConfig).driver === FileDriver.S3) {
+        // Return simple public S3 URL for public buckets
+        const region = (fileConfig() as FileConfig).awsS3Region ?? '';
+        const bucket = (fileConfig() as FileConfig).awsDefaultS3Bucket ?? '';
+        return `https://${bucket}.s3.${region}.amazonaws.com/${value}`;
       }
 
       return value;

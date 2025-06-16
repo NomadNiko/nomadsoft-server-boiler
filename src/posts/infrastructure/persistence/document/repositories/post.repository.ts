@@ -8,6 +8,8 @@ import { Comment } from '../../../../domain/comment';
 import { User } from '../../../../../users/domain/user';
 import { PostRepository } from '../../post.repository';
 import { UserMapper } from '../../../../../users/infrastructure/persistence/document/mappers/user.mapper';
+import { FileMapper } from '../../../../../files/infrastructure/persistence/document/mappers/file.mapper';
+import { FileType } from '../../../../../files/domain/file';
 import { DeepPartial } from '../../../../../utils/types/deep-partial.type';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 
@@ -23,22 +25,22 @@ export class PostsDocumentRepository implements PostRepository {
       name: data.name,
       content: data.content,
       imageUrl: data.imageUrl,
-      user: UserMapper.toPersistence(data.user as User),
+      images: data.images ? data.images.map(img => FileMapper.toPersistence(img as FileType)) : undefined,
+      user: (data.user as User).id,
       comments: [],
     };
 
     const createdPost = new this.postModel(createPostData);
     const savedPost = await createdPost.save();
     
-    await savedPost.populate('user');
+    await savedPost.populate(['user']);
     return PostMapper.toDomain(savedPost);
   }
 
   async findAllWithPagination(paginationOptions: IPaginationOptions): Promise<Post[]> {
     const posts = await this.postModel
       .find()
-      .populate('user')
-      .populate('comments.user')
+      .populate(['user', 'comments.user'])
       .sort({ createdAt: -1 })
       .skip((paginationOptions.page - 1) * paginationOptions.limit)
       .limit(paginationOptions.limit)
@@ -50,8 +52,7 @@ export class PostsDocumentRepository implements PostRepository {
   async findById(id: string): Promise<Post | null> {
     const post = await this.postModel
       .findById(id)
-      .populate('user')
-      .populate('comments.user')
+      .populate(['user', 'comments.user'])
       .exec();
 
     return post ? PostMapper.toDomain(post) : null;
@@ -60,8 +61,17 @@ export class PostsDocumentRepository implements PostRepository {
   async findByUser(user: User): Promise<Post[]> {
     const posts = await this.postModel
       .find({ user: user.id })
-      .populate('user')
-      .populate('comments.user')
+      .populate(['user', 'comments.user'])
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return posts.map((post) => PostMapper.toDomain(post));
+  }
+
+  async findByUserIds(userIds: string[]): Promise<Post[]> {
+    const posts = await this.postModel
+      .find({ user: { $in: userIds } })
+      .populate(['user', 'comments.user'])
       .sort({ createdAt: -1 })
       .exec();
 
@@ -73,12 +83,14 @@ export class PostsDocumentRepository implements PostRepository {
     if (payload.name !== undefined) updateData.name = payload.name;
     if (payload.content !== undefined) updateData.content = payload.content;
     if (payload.imageUrl !== undefined) updateData.imageUrl = payload.imageUrl;
+    if (payload.images !== undefined) {
+      updateData.images = payload.images ? payload.images.map(img => FileMapper.toPersistence(img as FileType)) : [];
+    }
     updateData.updatedAt = new Date();
 
     const updatedPost = await this.postModel
       .findByIdAndUpdate(id, updateData, { new: true })
-      .populate('user')
-      .populate('comments.user')
+      .populate(['user', 'comments.user'])
       .exec();
 
     if (!updatedPost) {

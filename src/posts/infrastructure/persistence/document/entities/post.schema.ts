@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { UserSchemaClass } from '../../../../../users/infrastructure/persistence/document/entities/user.schema';
+import { FileSchemaClass } from '../../../../../files/infrastructure/persistence/document/entities/file.schema';
 
 export type PostSchemaDocument = PostSchemaClass & Document;
 
@@ -29,6 +30,12 @@ export class PostSchemaClass {
     required: false,
   })
   imageUrl?: string;
+
+  @Prop({
+    type: [FileSchemaClass],
+    required: false,
+  })
+  images?: FileSchemaClass[];
 
   @Prop({
     type: Types.ObjectId,

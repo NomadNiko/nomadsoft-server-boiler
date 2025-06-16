@@ -1,4 +1,5 @@
 import { UserDto } from '../../users/dto/user.dto';
+import { FileDto } from '../../files/dto/file.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
 
 export class CommentDto {
@@ -31,6 +32,10 @@ export class PostDto {
 
   @Expose()
   imageUrl?: string;
+
+  @Expose()
+  @Type(() => FileDto)
+  images?: FileDto[];
 
   @Expose()
   @Type(() => UserDto)

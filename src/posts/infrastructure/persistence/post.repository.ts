@@ -13,6 +13,8 @@ export abstract class PostRepository {
   
   abstract findByUser(user: User): Promise<Post[]>;
   
+  abstract findByUserIds(userIds: string[]): Promise<Post[]>;
+  
   abstract update(id: string, payload: DeepPartial<Post>): Promise<Post>;
   
   abstract remove(id: string): Promise<void>;

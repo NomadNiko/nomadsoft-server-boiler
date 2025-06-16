@@ -84,4 +84,11 @@ export class User {
 
   @ApiProperty()
   deletedAt: Date;
+
+  @ApiProperty({
+    type: [String],
+    description: 'Array of friend user IDs',
+  })
+  @Expose({ groups: ['me', 'admin'] })
+  friends?: string[];
 }

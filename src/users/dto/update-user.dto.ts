@@ -2,7 +2,7 @@ import { PartialType, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
 
 import { Transform, Type } from 'class-transformer';
-import { IsEmail, IsOptional, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, MinLength, IsArray, IsString } from 'class-validator';
 import { FileDto } from '../../files/dto/file.dto';
 import { RoleDto } from '../../roles/dto/role.dto';
 import { StatusDto } from '../../statuses/dto/status.dto';
@@ -45,4 +45,14 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   @Type(() => StatusDto)
   status?: StatusDto;
+
+  @ApiPropertyOptional({ 
+    type: [String],
+    description: 'Array of friend user IDs',
+    example: ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012']
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  friends?: string[];
 }
