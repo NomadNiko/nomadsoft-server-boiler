@@ -38,20 +38,15 @@ export class PostsService {
   async findAll(query: QueryPostDto): Promise<Post[]> {
     // Get all hidden user IDs
     const hiddenUserIds = await this.hiddenUsersService.getAllHiddenUserIds();
-    console.log(`[PostsService] Hidden user IDs: ${hiddenUserIds.join(', ')}`);
     
     // Get all posts
     const allPosts = await this.postRepository.findAllWithPagination({
       page: query.page ?? 1,
       limit: query.limit ?? 10,
     });
-    console.log(`[PostsService] Total posts before filtering: ${allPosts.length}`);
     
     // Filter out posts from hidden users
-    const filteredPosts = allPosts.filter(post => !hiddenUserIds.includes(post.user.id.toString()));
-    console.log(`[PostsService] Posts after filtering: ${filteredPosts.length}`);
-    
-    return filteredPosts;
+    return allPosts.filter(post => !hiddenUserIds.includes(post.user.id.toString()));
   }
 
   async findOne(id: string): Promise<Post> {

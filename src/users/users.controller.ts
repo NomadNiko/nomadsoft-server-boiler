@@ -238,10 +238,18 @@ export class PublicUsersController {
     description: 'The ID of the user to get friends count for',
   })
   async getFriendsCount(@Param('userId') userId: string): Promise<{ userId: string; friendsCount: number }> {
-    const friendsCount = await this.usersService.getFriendsCount(userId);
-    return {
-      userId,
-      friendsCount,
-    };
+    try {
+      const friendsCount = await this.usersService.getFriendsCount(userId);
+      return {
+        userId,
+        friendsCount,
+      };
+    } catch (error) {
+      // Return 0 friends for non-existent users
+      return {
+        userId,
+        friendsCount: 0,
+      };
+    }
   }
 }
